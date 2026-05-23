@@ -14,6 +14,17 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: platform-lab-tls
+            kind: Secret
 ---
 # HTTPRoute exposing the platform-lab service
 apiVersion: gateway.network.k8s.io/v1
@@ -24,6 +35,11 @@ metadata:
 spec:
   parentRefs:
     - name: platform-lab
+      sectionName: http
+      kind: Gateway
+      namespace: platform-lab
+    - name: platform-lab
+      sectionName: https
       kind: Gateway
       namespace: platform-lab
   rules:
