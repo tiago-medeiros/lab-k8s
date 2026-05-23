@@ -1,0 +1,17 @@
+# Helm base values for the lab Kubernetes domain
+ingress:
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+cluster:
+  name: platform-lab
+  dns_domain: cluster.local
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
