@@ -1,8 +1,9 @@
-# Helm base values for the lab Kubernetes domain
-ingress:
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+gateway:
+  className: envoy-gateway
+  namespace: gateway-system
+  gatewayName: platform-lab
+  protocol: HTTP
+  port: 80
 
 cluster:
   name: platform-lab

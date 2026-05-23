@@ -1,8 +1,10 @@
 # lab-k8s: Kubernetes cluster via KIND + Helm charts
-# Creates a local K8s cluster and deploys Helm charts.
+# Creates a local K8s cluster and deploys Gateway API + Helm charts.
 
 KUBECONFIG ?= $(shell pwd)/kubeconfig
 KIND_CLUSTER_NAME ?= platform-lab
+GATEWAY_NS ?= gateway-system
+GATEWAY_VERSION ?= v0.5.0
 
 .PHONY: setup deploy test teardown validate
 
@@ -14,9 +16,16 @@ setup:
 		--config kind/cluster-config.yaml \
 		--kubeconfig $(KUBECONFIG) || echo "Cluster may already exist."
 	kubectl --kubeconfig $(KUBECONFIG) wait --for=condition=Ready nodes --all --timeout=120s
+	@echo "Installing Gateway API CRDs..."
+	kubectl --kubeconfig $(KUBECONFIG) apply -f kind/gateway-api.yaml
+	@echo "Waiting for CRDs to be ready..."
+	kubectl --kubeconfig $(KUBECONFIG) wait -n gateway-system --for=condition=Available deployment \
+		-l app.kubernetes.io/component=gateway --timeout=120s 2>/dev/null || true
 	@echo "Cluster ready."
 
 deploy: setup
+	@echo "Deploying Gateway API gateway..."
+	kubectl --kubeconfig $(KUBECONFIG) apply -f kind/cluster.yaml
 	@echo "Deploying Helm charts..."
 	helm upgrade --install --create-namespace \
 		--namespace platform-lab \
@@ -30,6 +39,8 @@ test:
 	kubectl --kubeconfig $(KUBECONFIG) get nodes
 	kubectl --kubeconfig $(KUBECONFIG) get namespaces
 	kubectl --kubeconfig $(KUBECONFIG) -n platform-lab get all
+	kubectl --kubeconfig $(KUBECONFIG) get gateways
+	kubectl --kubeconfig $(KUBECONFIG) get httproutes
 	@echo "Tests passed!"
 
 teardown:
